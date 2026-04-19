@@ -1,7 +1,7 @@
+#include <algorithm>
 #include <cstdint>
 #include <print>
 #include <vector>
-#include <algorithm>
 
 auto main() -> int32_t {
     std::vector<int32_t> v = {5, 3, 1, 4, 2};
