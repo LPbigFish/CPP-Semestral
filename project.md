@@ -2,7 +2,7 @@
 
 CLI Bitcoin CPU miner s využitím multithreadingu.
 
-## Overview:
+## Overview
 
 - Multithreading
 - TCP Networking

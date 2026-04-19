@@ -1,9 +1,4 @@
-//
-// Created by lpbigfish on 16.03.26.
-//
-
-#ifndef SEMESTRAL_BLOCKHEADER_H
-#define SEMESTRAL_BLOCKHEADER_H
+#pragma once
 #include <array>
 #include <cstdint>
 
@@ -17,5 +12,3 @@ struct BlockHeader {
     uint32_t bits;
     uint32_t nonce;
 };
-
-#endif //SEMESTRAL_BLOCKHEADER_H

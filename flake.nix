@@ -7,7 +7,7 @@
   };
 
   outputs =
-    inputs@{ flake-parts, nixpkgs, ... }:
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "x86_64-linux"
@@ -16,17 +16,15 @@
         "x86_64-darwin"
       ];
       perSystem =
-        { config, pkgs, ... }:
+        { pkgs, ... }:
         {
           devShells.default = pkgs.mkShell.override { stdenv = pkgs.llvmPackages_latest.libcxxStdenv; } {
             packages =
               with pkgs;
               [
-                clang-tools
-                clang-analyzer
+                llvmPackages_latest.clang-tools
+                llvmPackages_latest.lldb
                 cmake
-                lldb
-                ninja
               ]
               ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
                 binutils

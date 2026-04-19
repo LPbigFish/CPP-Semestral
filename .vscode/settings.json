@@ -1,0 +1,9 @@
+{
+    "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
+    "nixEnvPicker.envFile": "${workspaceFolder}${/}flake.nix",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.arguments": [
+        "--compile-commands-dir=build",
+        "--query-driver=/nix/store/*-clang-wrapper-*/bin/clang++,/nix/store/*-clang-*/bin/clang++"
+    ]
+}
