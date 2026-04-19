@@ -36,10 +36,7 @@ add_link_options(
         -fsanitize=undefined
 )
 
-file(GLOB SOURCES src/sources/*.cpp)
-file(GLOB HEADERS src/headers/*.h src/headers/*.hpp)
-add_executable(Semestral ${SOURCES} ${HEADERS})
-
-target_include_directories(Semestral PRIVATE src/headers)
+file(GLOB_RECURSE SOURCES src/*.cpp)
+add_executable(Semestral ${SOURCES})
 
 target_compile_options(Semestral PRIVATE -Wall -Wextra -Wpedantic)
