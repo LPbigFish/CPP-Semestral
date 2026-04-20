@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 4.1)
 project(Semestral)
 
-set(CMAKE_C_STANDARD 26)
+set(CMAKE_C_STANDARD 23)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 23)
+
+include(CTest)
+
+find_package(GTest REQUIRED)
 
 add_compile_options(
         -fsanitize=address
@@ -39,6 +43,24 @@ add_link_options(
 )
 
 file(GLOB_RECURSE SOURCES src/*.cpp)
-add_executable(Semestral ${SOURCES})
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
-target_compile_options(Semestral PRIVATE -Wall -Wextra -Wpedantic)
+add_library(SemestralLib STATIC ${SOURCES})
+
+add_executable(Semestral src/main.cpp)
+target_link_libraries(Semestral PRIVATE SemestralLib)
+
+file(GLOB_RECURSE TEST_SOURCES tests/*.cpp)
+
+add_executable(SemestralTests ${TEST_SOURCES})
+
+target_link_libraries(
+        SemestralTests
+        PRIVATE
+        SemestralLib
+        GTest::gtest
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(SemestralTests)

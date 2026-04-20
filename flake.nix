@@ -24,6 +24,7 @@
               [
                 llvmPackages_latest.clang-tools
                 llvmPackages_latest.lldb
+                gnumake
                 cmake
               ]
               ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
@@ -33,6 +34,7 @@
                 pkg-config
                 boost
                 openssl
+                (gtest.override { stdenv = pkgs.llvmPackages_latest.libcxxStdenv; })
 
                 jq
                 bitcoin
