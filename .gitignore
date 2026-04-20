@@ -20,3 +20,8 @@ CMakeUserPresets.json
 /result
 a.out
 /Semestral
+
+/.bitcoin-regtest/
+
+/addresses.txt
+/transactions.txt

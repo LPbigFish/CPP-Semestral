@@ -33,6 +33,9 @@
                 pkg-config
                 boost
                 openssl
+
+                jq
+                bitcoin
               ];
 
             shellHooks = "";
