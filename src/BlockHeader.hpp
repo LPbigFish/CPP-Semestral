@@ -1,9 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
-
-using Sha256Hash = std::array<uint32_t, 8>;
-static_assert(sizeof(Sha256Hash) == 32, "Sha256Hash must be 32 bytes");
+#include "Sha256.hpp"
 
 struct BlockHeader {
     uint32_t version;
