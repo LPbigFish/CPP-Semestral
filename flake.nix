@@ -26,6 +26,7 @@
                 llvmPackages_latest.lldb
                 gnumake
                 cmake
+                cmake-format
               ]
               ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
                 binutils

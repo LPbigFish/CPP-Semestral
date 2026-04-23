@@ -1,5 +1,5 @@
 #pragma once
-#include "Sha256.hpp"
+
 #include <algorithm>
 #include <concepts>
 #include <ranges>
@@ -21,10 +21,9 @@ namespace endian {
 
     // https://www.geeksforgeeks.org/cpp/templates-cpp/
     template<std::unsigned_integral T, std::size_t N>
-    constexpr auto reverse_bytes(const std::array<T, N>& values) -> std::array<T, N> {
-        std::array<T, N> result{};
-        std::ranges::transform(values, result.begin(), [](T x) -> auto { return std::byteswap(x); });
-        std::ranges::reverse(result);
+    constexpr auto reverse_bytes(const std::array<T, N>& value) -> std::array<T, N> {
+        std::array<T, N> result;
+        std::ranges::transform(value, result.begin(), [](T x) -> T { return std::byteswap(x); });
         return result;
     }
 }  // namespace endian
