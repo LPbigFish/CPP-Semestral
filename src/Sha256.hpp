@@ -1,15 +1,18 @@
 #pragma once
 
+#include "Endian.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <ranges>
+#include <openssl/sha.h>
 #include <span>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <openssl/sha.h>
 
+/**
+ * Represents a 256-bit hash value, typically used for SHA-256 hashes.
+ * Internally stores the hash in native representation
+ */
 struct Sha256Hash {
     std::array<uint32_t, 8> data{};
 
@@ -23,19 +26,30 @@ struct Sha256Hash {
         );
     }
 
-    auto operator==(const Sha256Hash& other) const -> bool {
+    auto operator==(const Sha256Hash& other) const noexcept -> bool {
         return data == other.data;
     }
 
-    [[nodiscard]] auto get_data() const -> std::span<const uint32_t> {
+    [[nodiscard]] auto get_data() const noexcept -> std::span<const uint32_t> {
         return data;
     }
 
-    static auto from_hex(const std::string_view& hex) -> Sha256Hash;
+    static auto from_hex(std::string_view hex) -> Sha256Hash;
 
-    [[nodiscard]] auto hash() const -> Sha256Hash;
+    [[nodiscard]] auto hash() const noexcept -> Sha256Hash;
+
+    [[nodiscard]] constexpr static auto
+    hash_bytes(const std::span<const uint8_t>& input) noexcept -> Sha256Hash {
+        std::array<uint8_t, 32> final_hash{};
+
+        SHA256(input.data(), input.size(), final_hash.data());
+
+        return Sha256Hash{endian::from_be_bytes<uint32_t, 8>(final_hash)};
+    }
 
     [[nodiscard]] auto to_hex() const -> std::string;
+
+    [[nodiscard]] auto reversed() const noexcept -> Sha256Hash;
 };
 
 static_assert(sizeof(Sha256Hash) == 32, "Sha256Hash must be 32 bytes");
