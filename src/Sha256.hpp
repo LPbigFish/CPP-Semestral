@@ -33,6 +33,10 @@ struct Sha256Hash {
     [[nodiscard]] auto get_data() const noexcept -> std::span<const uint32_t> {
         return data;
     }
+    
+    auto operator==(const std::array<uint32_t, 8>& other) const -> bool {
+        return data == other;
+    }
 
     static auto from_hex(std::string_view hex) -> Sha256Hash;
 
@@ -50,6 +54,9 @@ struct Sha256Hash {
     [[nodiscard]] auto to_hex() const -> std::string;
 
     [[nodiscard]] auto reversed() const noexcept -> Sha256Hash;
+    [[nodiscard]] auto to_hex() const -> std::string;
+
+    [[nodiscard]] auto hash() const -> Sha256Hash;
 };
 
 static_assert(sizeof(Sha256Hash) == 32, "Sha256Hash must be 32 bytes");
