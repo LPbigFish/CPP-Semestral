@@ -10,19 +10,14 @@ auto BlockHeader::hash() const -> Sha256Hash {
         sizeof(header_bytes) == 80, "Block header must be exactly 80 bytes"
     );
 
-    auto result = Sha256Hash::hash_bytes(header_bytes).hash();
-    auto result_bytes = endian::to_be_bytes(result.data);
-    std::ranges::reverse(result_bytes);
-    return Sha256Hash{endian::from_be_bytes<uint32_t, 8>(result_bytes)};
+    return Sha256Hash::double_hash_bytes(header_bytes);
 }
 
 auto BlockHeader::serialize() const -> std::array<uint8_t, 80> {
     std::array<uint8_t, 80> header_bytes{};
     auto version_bytes = endian::to_le_bytes(version);
-    auto prev_hash_bytes = endian::to_be_bytes(previous_hash.data);
-    std::ranges::reverse(prev_hash_bytes);
-    auto merkle_root_bytes = endian::to_be_bytes(merkle_root.data);
-    std::ranges::reverse(merkle_root_bytes);
+    auto prev_hash_bytes = previous_hash.to_internal_bytes();
+    auto merkle_root_bytes = merkle_root.to_internal_bytes();
     auto time_bytes = endian::to_le_bytes(time);
     auto bits_bytes = endian::to_le_bytes(bits);
     auto nonce_bytes = endian::to_le_bytes(nonce);

@@ -60,3 +60,87 @@ TEST(Sha256Test, HashTest) {
     Sha256Hash result = hash.hash();
     ASSERT_EQ(result, expected);
 }
+
+TEST(Sha256Test, ToInternalBytesGenesisHash) {
+    Sha256Hash hash = Sha256Hash::from_hex(
+        "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
+    );
+    auto bytes = hash.to_internal_bytes();
+
+    std::array<uint8_t, 32> expected = {
+        0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,
+        0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
+        0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
+        0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    ASSERT_EQ(bytes, expected);
+}
+
+TEST(Sha256Test, FromInternalBytesGenesisHash) {
+    std::array<uint8_t, 32> internal = {
+        0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,
+        0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
+        0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
+        0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    Sha256Hash hash = Sha256Hash::from_internal_bytes(internal);
+
+    Sha256Hash expected = Sha256Hash::from_hex(
+        "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
+    );
+    ASSERT_EQ(hash, expected);
+}
+
+TEST(Sha256Test, InternalBytesRoundtrip) {
+    constexpr std::string_view HEX{
+        "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"
+    };
+    Sha256Hash original = Sha256Hash::from_hex(HEX);
+    auto bytes = original.to_internal_bytes();
+    Sha256Hash restored = Sha256Hash::from_internal_bytes(bytes);
+    ASSERT_EQ(restored, original);
+    ASSERT_EQ(restored.to_hex(), HEX);
+}
+
+TEST(Sha256Test, InternalBytesAllZeros) {
+    Sha256Hash zero{};
+    auto bytes = zero.to_internal_bytes();
+    ASSERT_EQ(bytes, (std::array<uint8_t, 32>{}));
+
+    Sha256Hash restored = Sha256Hash::from_internal_bytes(bytes);
+    ASSERT_EQ(restored, zero);
+}
+
+TEST(Sha256Test, FromHexRejectsWrongLength) {
+    EXPECT_THROW(Sha256Hash::from_hex(""), std::invalid_argument);
+    EXPECT_THROW(Sha256Hash::from_hex("00"), std::invalid_argument);
+    EXPECT_THROW(
+        Sha256Hash::from_hex(
+            "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26"
+        ),
+        std::invalid_argument
+    );
+    EXPECT_THROW(
+        Sha256Hash::from_hex(
+            "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f00"
+        ),
+        std::invalid_argument
+    );
+}
+
+TEST(Sha256Test, FromHexRejectsInvalidChars) {
+    EXPECT_THROW(
+        Sha256Hash::from_hex(
+            "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26g"
+        ),
+        std::invalid_argument
+    );
+    EXPECT_THROW(
+        Sha256Hash::from_hex(
+            "000000000019d6689c085ae16G831e934ff763ae46a2a6c172b3f1b60a8ce26f"
+        ),
+        std::invalid_argument
+    );
+}

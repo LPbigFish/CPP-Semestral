@@ -79,3 +79,48 @@ TEST(BlockHeaderTest, Block2Hash) {
 
     ASSERT_EQ(block2_header.hash(), expected_hash);
 }
+
+TEST(BlockHeaderTest, GetTargetGenesisBits) {
+    Sha256Hash target = BlockHeader::get_target(0x1D00FFFF);
+
+    Sha256Hash genesis_hash = Sha256Hash::from_hex(
+        "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
+    );
+
+    ASSERT_TRUE(genesis_hash < target);
+    ASSERT_EQ(
+        target.to_hex(),
+        "00000000ffff0000000000000000000000000000000000000000000000000000"
+    );
+}
+
+TEST(BlockHeaderTest, GetTargetZeroBits) {
+    Sha256Hash target = BlockHeader::get_target(0x01000000);
+    ASSERT_EQ(target, Sha256Hash{});
+}
+
+TEST(BlockHeaderTest, GetTargetNegativeCoefficient) {
+    Sha256Hash target = BlockHeader::get_target(0x01800000);
+    ASSERT_EQ(target, Sha256Hash{});
+}
+
+TEST(BlockHeaderTest, GetTargetLowExponent) {
+    Sha256Hash target = BlockHeader::get_target(0x03000100);
+    ASSERT_EQ(target.to_hex(), "0000000000000000000000000000000000000000000000000000000000000100");
+}
+
+TEST(BlockHeaderTest, GetTargetGenesisHashBelowTarget) {
+    BlockHeader genesis_header;
+    genesis_header.version = 1;
+    genesis_header.previous_hash = Sha256Hash{0, 0, 0, 0, 0, 0, 0, 0};
+    genesis_header.merkle_root = Sha256Hash::from_hex(
+        "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"
+    );
+    genesis_header.time = 1231006505;
+    genesis_header.bits = 0x1D00FFFF;
+    genesis_header.nonce = 0x7C2BAC1D;
+
+    Sha256Hash hash = genesis_header.hash();
+    Sha256Hash target = BlockHeader::get_target(genesis_header.bits);
+    ASSERT_TRUE(hash < target);
+}
