@@ -17,8 +17,11 @@
       ];
       perSystem =
         { pkgs, ... }:
+        let
+          stdenv = pkgs.llvmPackages_latest.libcxxStdenv;
+        in
         {
-          devShells.default = pkgs.mkShell.override { stdenv = pkgs.llvmPackages_latest.libcxxStdenv; } {
+          devShells.default = pkgs.mkShell.override { inherit stdenv; } {
             packages =
               with pkgs;
               [
@@ -35,7 +38,7 @@
                 pkg-config
                 boost
                 openssl
-                (gtest.override { stdenv = pkgs.llvmPackages_latest.libcxxStdenv; })
+                (gtest.override { inherit stdenv; })
 
                 jq
                 bitcoin

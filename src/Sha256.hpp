@@ -40,6 +40,8 @@ struct Sha256Hash {
 
     static auto from_hex(std::string_view hex) -> Sha256Hash;
 
+    [[nodiscard]] auto to_hex() const -> std::string;
+
     [[nodiscard]] auto hash() const noexcept -> Sha256Hash;
 
     [[nodiscard]] constexpr static auto
@@ -50,8 +52,6 @@ struct Sha256Hash {
 
         return Sha256Hash{endian::from_be_bytes<uint32_t, 8>(final_hash)};
     }
-
-    [[nodiscard]] auto to_hex() const -> std::string;
 
     [[nodiscard]] auto reversed() const noexcept -> Sha256Hash;
 };
