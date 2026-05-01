@@ -10,7 +10,7 @@ auto main() -> int32_t {
         std::println("{}", x);
     }
 
-    std::println("Hello, C++26!");
+    std::println("Hello, C++23!");
 
     return 0;
 }

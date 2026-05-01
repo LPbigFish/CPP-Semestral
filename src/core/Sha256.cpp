@@ -31,11 +31,10 @@ auto Sha256Hash::from_hex(std::string_view hex) -> Sha256Hash {
 
     for (size_t i = 0; i < 64; i += 8) {
         uint32_t word{};
-        const auto *first = hex.data() + i;
-        const auto *last = hex.data() + i + 8;
+        const auto* first = hex.data() + i;
+        const auto* last = hex.data() + i + 8;
 
-        auto [end, ec]
-            = std::from_chars(first, last, word, 16);
+        auto [end, ec] = std::from_chars(first, last, word, 16);
         if (ec != std::errc{} || end != last) {
             throw std::invalid_argument("Invalid hex string");
         }
@@ -43,16 +42,6 @@ auto Sha256Hash::from_hex(std::string_view hex) -> Sha256Hash {
     }
 
     return Sha256Hash{result};
-}
-
-auto Sha256Hash::hash() const noexcept -> Sha256Hash {
-    std::array<uint8_t, 32> final_hash{};
-
-    const auto input_bytes = endian::to_be_bytes(this->data);
-
-    SHA256(input_bytes.data(), input_bytes.size(), final_hash.data());
-
-    return Sha256Hash{endian::from_be_bytes<uint32_t, 8>(final_hash)};
 }
 
 auto Sha256Hash::to_hex() const -> std::string {

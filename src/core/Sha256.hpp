@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <openssl/sha.h>
 #include <span>
 #include <string>
 #include <string_view>
@@ -47,27 +46,6 @@ struct Sha256Hash {
     static auto from_hex(std::string_view hex) -> Sha256Hash;
 
     [[nodiscard]] auto to_hex() const -> std::string;
-
-    [[nodiscard]] auto hash() const noexcept -> Sha256Hash;
-
-    [[nodiscard]] constexpr static auto double_hash_bytes(const std::span<const uint8_t>& input) noexcept -> Sha256Hash {
-        std::array<uint8_t, 32> first_hash{};
-        SHA256(input.data(), input.size(), first_hash.data());
-
-        std::array<uint8_t, 32> final_hash{};
-        SHA256(first_hash.data(), first_hash.size(), final_hash.data());
-
-        return Sha256Hash::from_internal_bytes(final_hash);
-    }
-
-    [[nodiscard]] constexpr static auto
-    hash_bytes(const std::span<const uint8_t>& input) noexcept -> Sha256Hash {
-        std::array<uint8_t, 32> final_hash{};
-
-        SHA256(input.data(), input.size(), final_hash.data());
-
-        return Sha256Hash{endian::from_be_bytes<uint32_t, 8>(final_hash)};
-    }
 
     [[nodiscard]] auto reversed() const noexcept -> Sha256Hash;
 

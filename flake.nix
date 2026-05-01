@@ -19,32 +19,63 @@
         { pkgs, ... }:
         let
           stdenv = pkgs.llvmPackages_latest.libcxxStdenv;
+
+          dependencies = with pkgs; [
+            openssl
+            boost
+            (gtest.override { inherit stdenv; })
+          ];
+
+          runtimeSoftware = with pkgs; [
+            jq
+            bitcoin
+          ];
+
+          clangTools = with pkgs; [
+            llvmPackages_latest.clang-tools
+            llvmPackages_latest.lldb
+          ];
+
+          buildTools =
+            with pkgs;
+            [
+              gnumake
+              cmake
+              cmake-format
+            ]
+            ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+              binutils
+            ];
         in
         {
-          devShells.default = pkgs.mkShell.override { inherit stdenv; } {
-            packages =
-              with pkgs;
-              [
-                llvmPackages_latest.clang-tools
-                llvmPackages_latest.lldb
-                gnumake
-                cmake
-                cmake-format
-              ]
-              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
-                binutils
-              ]
-              ++ [
-                pkg-config
-                boost
-                openssl
-                (gtest.override { inherit stdenv; })
+          devShells = {
+            default = pkgs.mkShell.override { inherit stdenv; } {
+              packages = dependencies ++ runtimeSoftware ++ clangTools ++ buildTools;
+            };
 
-                jq
-                bitcoin
-              ];
+            noBitcoin = pkgs.mkShell.override { inherit stdenv; } {
+              packages = dependencies ++ clangTools ++ buildTools;
+            };
+          };
 
-            shellHooks = "";
+          packages.default = stdenv.mkDerivation {
+            pname = "semestralBitcoinMiner";
+            version = "0.0.1";
+            src = ./.;
+
+            nativeBuildInputs = [ pkgs.cmake ];
+            buildInputs = dependencies;
+
+            cmakeFlags = [
+              "-DCMAKE_BUILD_TYPE=Release"
+            ];
+
+            installPhase = ''
+              runHook preInstall
+              mkdir -p $out/bin
+              install -m755 Semestral $out/bin/
+              runHook postInstall
+            '';
           };
         };
     };

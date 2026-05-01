@@ -1,4 +1,4 @@
-#include "../src/Endian.hpp"
+#include "../src/core/Endian.hpp"
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
