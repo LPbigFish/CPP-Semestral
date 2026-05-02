@@ -52,7 +52,3 @@ private:
     template <std::ranges::input_range... Ranges>
     auto formalize(std::span<uint8_t> output, Ranges&... ranges) -> void;
 };
-
-struct Block {
-    BlockHeader header;
-};

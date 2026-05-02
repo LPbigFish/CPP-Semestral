@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Semestral",
+            "program": "${workspaceFolder}/build/Semestral",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "preLaunchTask": "build"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Tests",
+            "program": "${workspaceFolder}/build/SemestralTests",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "preLaunchTask": "build"
+        }
+    ]
+}

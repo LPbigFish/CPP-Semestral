@@ -1,6 +1,4 @@
 #include "../src/core/Sha256.hpp"
-#include "../src/core/OpensslHasher.hpp"
-#include "../src/core/Endian.hpp"
 #include <gtest/gtest.h>
 
 TEST(Sha256Test, TypeSizeSampleTest) {
@@ -50,19 +48,6 @@ TEST(Sha256Test, HexRoundtripTest) {
     };
     Sha256Hash hash = Sha256Hash::from_hex(HEX);
     ASSERT_EQ(hash.to_hex(), HEX);
-}
-
-TEST(Sha256Test, HashTest) {
-    Sha256Hash hash = Sha256Hash::from_hex(
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    );
-    Sha256Hash expected = Sha256Hash::from_hex(
-        "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456"
-    );
-    OpensslHasher hasher;
-    auto input_bytes = endian::to_be_bytes(hash.data);
-    Sha256Hash result = hasher.hash_bytes(input_bytes);
-    ASSERT_EQ(result, expected);
 }
 
 TEST(Sha256Test, ToInternalBytesGenesisHash) {

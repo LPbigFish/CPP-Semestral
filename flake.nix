@@ -31,9 +31,10 @@
             bitcoin
           ];
 
-          clangTools = with pkgs; [
-            llvmPackages_latest.clang-tools
-            llvmPackages_latest.lldb
+          clangTools = with pkgs.llvmPackages_latest; [
+            clang
+            clang-tools
+            lldb
           ];
 
           buildTools =

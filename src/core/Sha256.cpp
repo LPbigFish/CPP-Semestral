@@ -7,22 +7,6 @@
 
 // https://en.cppreference.com/cpp/utility/from_chars
 auto Sha256Hash::from_hex(std::string_view hex) -> Sha256Hash {
-    /* for (size_t i = 0; i < result.size() && i * 8 < hex.size(); ++i) {
-        uint32_t value = 0;
-        for (size_t j = 0; j < 8 && (i * 8) + j < hex.size(); ++j) {
-            char c = hex[(i * 8) + j];
-            value <<= 4;
-            if (c >= '0' && c <= '9') {
-                value |= (c - '0');
-                } else if (c >= 'a' && c <= 'f') {
-                    value |= (c - 'a' + 10);
-                    } else if (c >= 'A' && c <= 'F') {
-                        value |= (c - 'A' + 10);
-                        }
-                        }
-                        result.at(i) = value;
-                        } */
-
     if (hex.size() != 64) {
         throw std::invalid_argument("Hex string must be exactly 64 characters");
     }
