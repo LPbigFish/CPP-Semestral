@@ -1,5 +1,7 @@
 #include "OpensslHasher.hpp"
 #include "Sha256.hpp"
+#include <array>
+#include <cstdint>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 
@@ -58,5 +60,20 @@ auto OpensslHasher::reset() -> void {
 auto OpensslHasher::init() -> void {
     if (EVP_DigestInit_ex(md_ctx.get(), EVP_sha256(), nullptr) != 1) {
         throw std::runtime_error("Failed to initialize SHA-256 digest");
+    }
+}
+
+
+auto OpensslHasher::save_state() -> void {
+    if (!has_saved_state) {
+        this->saved_md_ctx.reset();
+        EVP_MD_CTX_copy_ex(saved_md_ctx.get(), md_ctx.get());
+        has_saved_state = true;
+    }
+}
+
+auto OpensslHasher::restore_state() -> void {
+    if (has_saved_state) {
+        EVP_MD_CTX_copy_ex(md_ctx.get(), saved_md_ctx.get());
     }
 }

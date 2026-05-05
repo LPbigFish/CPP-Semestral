@@ -1,21 +1,18 @@
 #pragma once
 
 #include "Hasher.hpp"
+#include <array>
 #include <cstddef>
-#include <memory>
-#include <openssl/evp.h>
+#include <cstdint>
 
-class OpensslHasher: public Hasher {
-    std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx{
-      EVP_MD_CTX_new(), &EVP_MD_CTX_free
-    };
-    std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> saved_md_ctx{
-      nullptr, &EVP_MD_CTX_free
-    };
-    bool has_saved_state{false};
+class OwnHasher: public Hasher {
+    std::array<uint32_t, 8> ctx;
+    std::array<uint8_t, 64> buffer{};
+    uint64_t total_bytes{0};
+    size_t buflen{0};
 
   public:
-    OpensslHasher();
+    OwnHasher();
     [[nodiscard]] auto
     hash_bytes(const std::span<const uint8_t>& input) const noexcept
         -> Sha256Hash override;
@@ -26,9 +23,6 @@ class OpensslHasher: public Hasher {
     auto update(const std::span<const uint8_t>& input) -> void override;
     auto finalize() -> Sha256Hash override;
     auto reset() -> void override;
-
-    auto save_state() -> void override;
-    auto restore_state() -> void override;
 private:
     auto init() -> void;
 };
