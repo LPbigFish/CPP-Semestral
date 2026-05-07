@@ -13,5 +13,5 @@ class MerkleTree {
 public:
     explicit MerkleTree(std::vector<std::string_view> txid_array);
 
-    auto finalize(Hasher *hasher) const -> Sha256Hash;
+    [[nodiscard]] auto finalize(const Hasher& hasher) const -> Sha256Hash;
 };

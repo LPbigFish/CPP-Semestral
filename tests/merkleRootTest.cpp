@@ -11,7 +11,7 @@ TEST(MerkleRootTest, GenesisTest) {
     OpensslHasher oh;
     auto genesis_merkle_root{Sha256Hash::from_hex("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b")};
 
-    ASSERT_EQ(genesis_merkle_root, mt.finalize(&oh));
+    ASSERT_EQ(genesis_merkle_root, mt.finalize(oh));
 }
 
 TEST(MerkleRootTest, Block179237) {
@@ -150,5 +150,5 @@ TEST(MerkleRootTest, Block179237) {
     OpensslHasher oh;
     auto genesis_merkle_root{Sha256Hash::from_hex("4d039fcec4c8c1ae17b8fcdb834872db1dcaed36c222991da81dacb36cf66c64")};
 
-    ASSERT_EQ(genesis_merkle_root, mt.finalize(&oh));
+    ASSERT_EQ(genesis_merkle_root, mt.finalize(oh));
 }
