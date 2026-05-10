@@ -37,13 +37,13 @@ auto MerkleTree::finalize(const Hasher& hasher) const -> Sha256Hash {
         std::vector<TXID> next;
         next.reserve(level.size() / 2);
 
-        for (size_t i = 0; i < level.size() - 1; i += 2) {
+        for (size_t i = 0; i < level.size(); i += 2) {
             auto left = level.at(i).to_internal_bytes();
             auto right = level.at(i + 1).to_internal_bytes();
 
             std::array<uint8_t, left.size() + right.size()> concat{};
             std::ranges::copy(left, concat.begin());
-            std::ranges::copy(right, concat.begin() + left.size());
+            std::ranges::copy(right, concat.begin() + 64);
 
             next.push_back(hasher.double_hash_bytes(concat));
         }

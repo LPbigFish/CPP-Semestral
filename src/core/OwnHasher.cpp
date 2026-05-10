@@ -1,23 +1,10 @@
 #include "OwnHasher.hpp"
+#include "Sha256.hpp"
+#include <cstdint>
+#include <span>
 
-#define RROT(value, count) (value << count) | (value >> (sizeof(value) * 8 - count))
 
-#define LROT(value, count) (value >> count) | (value << (sizeof(value) * 8 - count))
-
-#define sum1(e) (RROT(e, 6)) ^ (RROT(e, 11)) ^ (RROT(e, 25))
-
-#define choice(e, f, g) (e && f) ^ ((!e) && g)
-
-#define sum2(a) (RROT(e, 2)) ^ (RROT(e, 13)) ^ (RROT(e, 22))
-
-#define majority(a, b, c) (a && b) ^ (a && c) ^ (b && c)
-
-#define sig1(a) (RROT(a, 7)) ^ (RROT(a, 18)) ^ (a >> 3)
-
-#define sig2(a) (RROT(a, 17)) ^ (RROT(a, 19)) ^ (a >> 10)
-
-/* 
-const std::array<uint32_t, 64> k{
+/* constexpr std::array<uint32_t, 64> K{
   0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1,
   0x923F82A4, 0xAB1C5ED5, 0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
   0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174, 0xE49B69C1, 0xEFBE4786,
@@ -31,7 +18,7 @@ const std::array<uint32_t, 64> k{
   0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
-const std::array<uint32_t, 64> h{
+constexpr std::array<uint32_t, 64> H{
   0x6A09E667,
   0xBB67AE85,
   0x3C6EF372,
@@ -40,4 +27,8 @@ const std::array<uint32_t, 64> h{
   0x9B05688C,
   0x1F83D9AB,
   0x5BE0CD19
-}; */
+};
+
+auto OwnHasher::hash_bytes(const std::span<const uint8_t>& input) const noexcept -> Sha256Hash {
+  
+} */
