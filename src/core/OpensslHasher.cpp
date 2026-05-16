@@ -12,8 +12,9 @@ OpensslHasher::OpensslHasher() {
     this->init();
 }
 
-auto OpensslHasher::hash_bytes(const std::span<const uint8_t>& input) const noexcept
-    -> Sha256Hash {
+auto OpensslHasher::hash_bytes(
+    const std::span<const uint8_t>& input
+) const noexcept -> Sha256Hash {
     std::array<uint8_t, 32> hash{};
     SHA256(input.data(), input.size(), hash.data());
     return Sha256Hash::from_internal_bytes(hash);
@@ -62,7 +63,6 @@ auto OpensslHasher::init() -> void {
         throw std::runtime_error("Failed to initialize SHA-256 digest");
     }
 }
-
 
 auto OpensslHasher::save_state() -> void {
     if (!has_saved_state) {

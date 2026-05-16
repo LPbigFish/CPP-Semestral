@@ -6,17 +6,16 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <ranges>
 #include <span>
 #include <string_view>
 #include <vector>
-#include <ranges>
 
 MerkleTree::MerkleTree(std::vector<std::string_view> txid_array) {
     namespace rv = std::views;
 
-    txids = txid_array
-        | rv::transform(Sha256Hash::from_hex)
-        | std::ranges::to<std::vector<TXID>>();
+    txids = txid_array | rv::transform(Sha256Hash::from_hex)
+          | std::ranges::to<std::vector<TXID>>();
 }
 
 auto MerkleTree::finalize(const Hasher& hasher) const -> Sha256Hash {

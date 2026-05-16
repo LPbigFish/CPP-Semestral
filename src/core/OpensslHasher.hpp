@@ -29,6 +29,7 @@ class OpensslHasher: public Hasher {
 
     auto save_state() -> void override;
     auto restore_state() -> void override;
-private:
+
+  private:
     auto init() -> void;
 };

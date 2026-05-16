@@ -10,7 +10,7 @@ using TXID = Sha256Hash;
 class MerkleTree {
     std::vector<TXID> txids;
 
-public:
+  public:
     explicit MerkleTree(std::vector<std::string_view> txid_array);
 
     [[nodiscard]] auto finalize(const Hasher& hasher) const -> Sha256Hash;
