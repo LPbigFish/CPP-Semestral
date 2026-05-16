@@ -1,11 +1,11 @@
 #pragma once
 
+#include "../core/Sha256.hpp"
 #include <boost/json/src.hpp>
 #include <cstdint>
 #include <expected>
 #include <string>
 #include <vector>
-#include "../core/Sha256.hpp"
 
 struct MiningJob;
 
@@ -18,18 +18,18 @@ struct TransactionData {
     Sha256Hash txid;
     Sha256Hash wtxid; // Spooky shit z SegWit upgradu, asi neimplementuju
     std::string data;
-    
 
-    static constexpr auto parse_tx_data(const boost::json::value& parse_data) -> TransactionData {
+    static constexpr auto parse_tx_data(const boost::json::value& parse_data)
+        -> TransactionData {
         auto data = parse_data.at("data").as_string();
-        auto txid = Sha256Hash::from_hex(
-            parse_data.at("txid").as_string()
-        );
-        auto wtxid = Sha256Hash::from_hex(
-            parse_data.at("hash").as_string()
-        );
-        
-        return TransactionData{.txid = txid, .wtxid = wtxid, .data = std::string{data}, };
+        auto txid = Sha256Hash::from_hex(parse_data.at("txid").as_string());
+        auto wtxid = Sha256Hash::from_hex(parse_data.at("hash").as_string());
+
+        return TransactionData{
+          .txid = txid,
+          .wtxid = wtxid,
+          .data = std::string{data},
+        };
     }
 };
 
@@ -44,7 +44,7 @@ struct BlockTemplate {
 };
 
 class MiningProtocol {
-    public:
+  public:
     MiningProtocol() = default;
     MiningProtocol(const MiningProtocol& protocol) = default;
     MiningProtocol(MiningProtocol&& protocol) = default;
@@ -54,5 +54,6 @@ class MiningProtocol {
 
     virtual auto get_job() -> std::expected<MiningJob, ProtocolError> = 0;
 
-    virtual auto submit_solution(const BlockTemplate& solution) -> std::expected<void, ProtocolError> = 0;
+    virtual auto submit_solution(const BlockTemplate& solution)
+        -> std::expected<void, ProtocolError> = 0;
 };

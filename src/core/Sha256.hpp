@@ -11,15 +11,17 @@
 /**
  * Represents a 256-bit hash value, typically used for SHA-256 hashes.
  * Internally stores the hash in **display order**
- * use to_internal_bytes() to get the internal byte representation used in block headers
- * and from_internal_bytes() to create a Sha256Hash from the internal byte representation.
+ * use to_internal_bytes() to get the internal byte representation used in block
+ * headers and from_internal_bytes() to create a Sha256Hash from the internal
+ * byte representation.
  */
 struct Sha256Hash {
     std::array<uint32_t, 8> data{};
 
     Sha256Hash() = default;
 
-    explicit Sha256Hash(const std::array<uint32_t, 8>& arr): data{arr} {}
+    explicit Sha256Hash(const std::array<uint32_t, 8>& arr)
+        : data{arr} {}
 
     Sha256Hash(std::initializer_list<uint32_t> init) {
         std::copy_n(
@@ -27,7 +29,8 @@ struct Sha256Hash {
         );
     }
 
-    auto operator<=>(const Sha256Hash& other) const noexcept -> std::strong_ordering {
+    auto operator<=>(const Sha256Hash& other) const noexcept
+        -> std::strong_ordering {
         return data <=> other.data;
     }
 
@@ -49,14 +52,16 @@ struct Sha256Hash {
 
     [[nodiscard]] auto reversed() const noexcept -> Sha256Hash;
 
-    [[nodiscard]] auto to_internal_bytes() const noexcept -> std::array<uint8_t, 32> {
+    [[nodiscard]] auto to_internal_bytes() const noexcept
+        -> std::array<uint8_t, 32> {
         std::array<uint8_t, 32> bytes{};
         auto data_bytes = endian::to_be_bytes(this->data);
         std::ranges::reverse_copy(data_bytes, bytes.begin());
         return bytes;
     }
 
-    constexpr static auto from_internal_bytes(const std::array<uint8_t, 32>& bytes) -> Sha256Hash {
+    constexpr static auto
+    from_internal_bytes(const std::array<uint8_t, 32>& bytes) -> Sha256Hash {
         std::array<uint8_t, 32> reversed_bytes{};
         std::ranges::reverse_copy(bytes, reversed_bytes.begin());
         return Sha256Hash{endian::from_be_bytes<uint32_t, 8>(reversed_bytes)};

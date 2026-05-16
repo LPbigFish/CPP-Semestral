@@ -3,9 +3,8 @@
 #include "../mining/MiningJob.hpp"
 #include <functional>
 
-
 class MiningEngine {
-public:
+  public:
     MiningEngine() = default;
 
     MiningEngine(const MiningEngine& mining_engine);
@@ -19,10 +18,11 @@ public:
     virtual ~MiningEngine() = default;
 
     virtual auto start() -> void = 0;
-    
+
     virtual auto stop() -> void = 0;
 
     virtual auto submit_job(const MiningJob& job) -> void = 0;
 
-    virtual auto solution_callback(std::function<void(const BlockHeader&)>) -> void = 0;
+    virtual auto solution_callback(std::function<void(const BlockHeader&)>)
+        -> void = 0;
 };
