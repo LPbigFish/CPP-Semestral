@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Hasher.hpp"
 #include "Sha256.hpp"
 #include <algorithm>
 #include <cstdint>
@@ -13,7 +12,7 @@ struct BlockHeader {
     uint32_t bits{0};
     uint32_t nonce{0};
 
-    [[nodiscard]] auto hash(const Hasher& hasher) -> Sha256Hash;
+    [[nodiscard]] auto hash() -> Sha256Hash;
 
     [[nodiscard]] auto serialize() -> std::array<uint8_t, 80>;
 
@@ -40,7 +39,8 @@ struct BlockHeader {
             }
 
             if (shift_words + 1 < 8 && shift_bits > 0) {
-                le_words.at(shift_words + 1) |= coefficient >> (32 - shift_bits);
+                le_words.at(shift_words + 1)
+                    |= coefficient >> (32 - shift_bits);
             }
         }
 
@@ -48,7 +48,7 @@ struct BlockHeader {
         return Sha256Hash{le_words};
     }
 
-private:
-    template <std::ranges::input_range... Ranges>
+  private:
+    template<std::ranges::input_range... Ranges>
     auto formalize(std::span<uint8_t> output, Ranges&... ranges) -> void;
 };

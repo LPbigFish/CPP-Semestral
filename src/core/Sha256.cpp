@@ -1,9 +1,9 @@
 #include "Sha256.hpp"
 #include "Endian.hpp"
+#include "utils.hpp"
 #include <array>
 #include <charconv>
 #include <cstdint>
-#include <format>
 
 // https://en.cppreference.com/cpp/utility/from_chars
 auto Sha256Hash::from_hex(std::string_view hex) -> Sha256Hash {
@@ -34,11 +34,7 @@ auto Sha256Hash::to_hex() const -> std::string {
 
     auto bytes = endian::to_be_bytes(this->data);
 
-    for (uint8_t byte : bytes) {
-        std::format_to(std::back_inserter(hex), "{:02x}", byte);
-    }
-
-    return hex;
+    return core::bytes_to_hex(bytes);
 }
 
 auto Sha256Hash::reversed() const noexcept -> Sha256Hash {

@@ -12,7 +12,7 @@ OpensslHasher::OpensslHasher() {
     this->init();
 }
 
-auto OpensslHasher::hash_bytes(const std::span<const uint8_t>& input) const noexcept
+auto OpensslHasher::hash_bytes(const std::span<const uint8_t>& input) noexcept
     -> Sha256Hash {
     std::array<uint8_t, 32> hash{};
     SHA256(input.data(), input.size(), hash.data());
@@ -21,7 +21,7 @@ auto OpensslHasher::hash_bytes(const std::span<const uint8_t>& input) const noex
 
 auto OpensslHasher::double_hash_bytes(
     const std::span<const uint8_t>& input
-) const noexcept -> Sha256Hash {
+) noexcept -> Sha256Hash {
     std::array<uint8_t, 32> first_hash{};
     SHA256(input.data(), input.size(), first_hash.data());
 
@@ -45,14 +45,6 @@ auto OpensslHasher::finalize() -> Sha256Hash {
     return Sha256Hash::from_internal_bytes(hash);
 }
 
-auto OpensslHasher::clone() const -> std::unique_ptr<Hasher> {
-    auto new_hasher = std::make_unique<OpensslHasher>();
-    if (EVP_MD_CTX_copy_ex(new_hasher->md_ctx.get(), this->md_ctx.get()) != 1) {
-        throw std::runtime_error("Failed to clone EVP_MD_CTX");
-    }
-    return new_hasher;
-}
-
 auto OpensslHasher::reset() -> void {
     this->init();
 }
@@ -63,11 +55,12 @@ auto OpensslHasher::init() -> void {
     }
 }
 
-
 auto OpensslHasher::save_state() -> void {
     if (!has_saved_state) {
-        this->saved_md_ctx.reset();
-        EVP_MD_CTX_copy_ex(saved_md_ctx.get(), md_ctx.get());
+        saved_md_ctx.reset(EVP_MD_CTX_new());
+        if (EVP_MD_CTX_copy_ex(saved_md_ctx.get(), md_ctx.get()) != 1) {
+            throw std::runtime_error("Failed to save digest state");
+        }
         has_saved_state = true;
     }
 }

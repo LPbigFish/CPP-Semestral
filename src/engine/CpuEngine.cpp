@@ -1,4 +1,5 @@
 #include "CpuEngine.hpp"
+#include "../core/OpensslHasher.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -9,7 +10,7 @@
 #include <stop_token>
 #include <utility>
 
-CpuEngine::CpuEngine(const Hasher& hasher, uint8_t num_threads) : hasher_init{hasher.clone()}, num_threads{num_threads} {}
+CpuEngine::CpuEngine(uint8_t num_threads): num_threads{num_threads} {}
 
 auto CpuEngine::start() -> void {
     stop();
@@ -18,7 +19,9 @@ auto CpuEngine::start() -> void {
     threads.clear();
 
     for (uint8_t i = 0; i < num_threads; i++) {
-        threads.emplace_back(&CpuEngine::work, this, stop_source.get_token(), i);
+        threads.emplace_back(
+            &CpuEngine::work, this, stop_source.get_token(), i
+        );
     }
 }
 
@@ -35,12 +38,14 @@ auto CpuEngine::submit_job(const MiningJob& job) -> void {
     current_job = job;
 }
 
-auto CpuEngine::solution_callback(std::function<void(const BlockHeader&)> callback) -> void {
+auto CpuEngine::solution_callback(
+    std::function<void(const BlockHeader&)> callback
+) -> void {
     on_solution = std::move(callback);
 }
 
 auto CpuEngine::work(const std::stop_token& token, uint8_t thread_id) -> void {
-    auto local_hasher = this->hasher_init->clone();
+    OpensslHasher local_hasher{};
 
     MiningJob job;
     {
@@ -51,16 +56,11 @@ auto CpuEngine::work(const std::stop_token& token, uint8_t thread_id) -> void {
     auto header_bytes = job.block_template.serialize();
     std::span<const uint8_t> head{header_bytes.data(), 64};
     std::array<uint8_t, 16> tail{};
-    
-    std::ranges::copy(
-        header_bytes
-            | std::views::drop(64)
-        , tail.begin()
-    );
 
-    local_hasher->reset();
-    local_hasher->update(head);
-    local_hasher->save_state();
+    std::ranges::copy(header_bytes | std::views::drop(64), tail.begin());
+
+    local_hasher.update(head);
+    local_hasher.save_state();
 
     uint32_t nonce{job.block_template.nonce + thread_id};
 
@@ -68,24 +68,23 @@ auto CpuEngine::work(const std::stop_token& token, uint8_t thread_id) -> void {
         auto nonce_le = endian::to_le_bytes(nonce);
         std::ranges::copy(nonce_le, tail.end() - sizeof(uint32_t));
 
-        local_hasher->restore_state();
-        local_hasher->update(tail);
-        auto first_iter{local_hasher->finalize()};
-        
+        local_hasher.restore_state();
+        local_hasher.update(tail);
+        auto first_iter{local_hasher.finalize()};
+
         auto first_iter_bytes{first_iter.to_internal_bytes()};
-        
-        auto final_iter{local_hasher->hash_bytes(first_iter_bytes)};
-        
+
+        auto final_iter{OpensslHasher::hash_bytes(first_iter_bytes)};
+
         if (final_iter < job.target) {
-            if(!solution_found.exchange(true)) {
+            if (!solution_found.exchange(true)) {
                 BlockHeader solution{job.block_template};
                 solution.nonce = nonce;
                 on_solution(solution);
             }
             return;
         }
-        
-        
+
         if (nonce > UINT32_MAX - num_threads) {
             break;
         }

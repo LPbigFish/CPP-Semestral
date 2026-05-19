@@ -1,34 +1,34 @@
 #pragma once
 
-#include "Hasher.hpp"
+#include "Sha256.hpp"
 #include <cstddef>
 #include <memory>
 #include <openssl/evp.h>
+#include <span>
 
-class OpensslHasher: public Hasher {
+class OpensslHasher {
     std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx{
       EVP_MD_CTX_new(), &EVP_MD_CTX_free
     };
     std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> saved_md_ctx{
-      nullptr, &EVP_MD_CTX_free
+      EVP_MD_CTX_new(), &EVP_MD_CTX_free
     };
     bool has_saved_state{false};
 
   public:
     OpensslHasher();
-    [[nodiscard]] auto
-    hash_bytes(const std::span<const uint8_t>& input) const noexcept
-        -> Sha256Hash override;
-    [[nodiscard]] auto
-    double_hash_bytes(const std::span<const uint8_t>& input) const noexcept
-        -> Sha256Hash override;
-    [[nodiscard]] auto clone() const -> std::unique_ptr<Hasher> override;
-    auto update(const std::span<const uint8_t>& input) -> void override;
-    auto finalize() -> Sha256Hash override;
-    auto reset() -> void override;
+    static auto hash_bytes(const std::span<const uint8_t>& input) noexcept
+        -> Sha256Hash;
+    static auto
+    double_hash_bytes(const std::span<const uint8_t>& input) noexcept
+        -> Sha256Hash;
+    auto update(const std::span<const uint8_t>& input) -> void;
+    auto finalize() -> Sha256Hash;
+    auto reset() -> void;
 
-    auto save_state() -> void override;
-    auto restore_state() -> void override;
-private:
+    auto save_state() -> void;
+    auto restore_state() -> void;
+
+  private:
     auto init() -> void;
 };

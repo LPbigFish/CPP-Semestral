@@ -1,5 +1,4 @@
 #include "../src/core/BlockHeader.hpp"
-#include "../src/core/OpensslHasher.hpp"
 #include <gtest/gtest.h>
 #include <sys/types.h>
 
@@ -56,7 +55,7 @@ TEST(BlockHeaderTest, GenesisBlockHash) {
         "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
     );
 
-    ASSERT_EQ(genesis_header.hash(OpensslHasher{}), expected_hash);
+    ASSERT_EQ(genesis_header.hash(), expected_hash);
 }
 
 TEST(BlockHeaderTest, Block2Hash) {
@@ -78,7 +77,7 @@ TEST(BlockHeaderTest, Block2Hash) {
         "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"
     );
 
-    ASSERT_EQ(block2_header.hash(OpensslHasher{}), expected_hash);
+    ASSERT_EQ(block2_header.hash(), expected_hash);
 }
 
 TEST(BlockHeaderTest, GetTargetGenesisBits) {
@@ -107,7 +106,10 @@ TEST(BlockHeaderTest, GetTargetNegativeCoefficient) {
 
 TEST(BlockHeaderTest, GetTargetLowExponent) {
     Sha256Hash target = BlockHeader::get_target(0x03000100);
-    ASSERT_EQ(target.to_hex(), "0000000000000000000000000000000000000000000000000000000000000100");
+    ASSERT_EQ(
+        target.to_hex(),
+        "0000000000000000000000000000000000000000000000000000000000000100"
+    );
 }
 
 TEST(BlockHeaderTest, GetTargetGenesisHashBelowTarget) {
@@ -121,7 +123,7 @@ TEST(BlockHeaderTest, GetTargetGenesisHashBelowTarget) {
     genesis_header.bits = 0x1D00FFFF;
     genesis_header.nonce = 0x7C2BAC1D;
 
-    Sha256Hash hash = genesis_header.hash(OpensslHasher{});
+    Sha256Hash hash = genesis_header.hash();
     Sha256Hash target = BlockHeader::get_target(genesis_header.bits);
     ASSERT_TRUE(hash < target);
 }

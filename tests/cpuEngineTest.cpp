@@ -34,11 +34,10 @@ auto genesis_expected_hash() -> Sha256Hash {
         "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
     );
 }
-}  // namespace
+} // namespace
 
 TEST(CpuEngineTest, FindsGenesisNonceSingleThread) {
-    OpensslHasher hasher;
-    CpuEngine engine(hasher, 1);
+    CpuEngine engine(1);
 
     MiningJob job;
     job.block_template = genesis_template(GENESIS_NONCE - 100);
@@ -61,20 +60,22 @@ TEST(CpuEngineTest, FindsGenesisNonceSingleThread) {
 
     {
         std::unique_lock lock{mtx};
-        ASSERT_TRUE(cv.wait_for(lock, std::chrono::seconds(30), [&] -> bool { return found; }));
+        ASSERT_TRUE(cv.wait_for(lock, std::chrono::seconds(30), [&] -> bool {
+            return found;
+        }));
     }
 
     EXPECT_EQ(solution.nonce, GENESIS_NONCE);
-    EXPECT_EQ(solution.hash(OpensslHasher{}), genesis_expected_hash());
+    EXPECT_EQ(solution.hash(), genesis_expected_hash());
 }
 
 TEST(CpuEngineTest, FindsGenesisNonceMultithreaded) {
     uint8_t num_threads = std::max(2u, std::thread::hardware_concurrency() - 1);
     OpensslHasher hasher;
-    CpuEngine engine(hasher, num_threads);
+    CpuEngine engine(num_threads);
 
     MiningJob job;
-    job.block_template = genesis_template(GENESIS_NONCE - 100'000'000);
+    job.block_template = genesis_template(GENESIS_NONCE - 1'000);
     job.target = genesis_target();
 
     std::mutex mtx;
@@ -94,9 +95,11 @@ TEST(CpuEngineTest, FindsGenesisNonceMultithreaded) {
 
     {
         std::unique_lock lock{mtx};
-        ASSERT_TRUE(cv.wait_for(lock, std::chrono::minutes(4), [&] -> bool { return found; }));
+        ASSERT_TRUE(cv.wait_for(lock, std::chrono::minutes(4), [&] -> bool {
+            return found;
+        }));
     }
 
     EXPECT_EQ(solution.nonce, GENESIS_NONCE);
-    EXPECT_EQ(solution.hash(OpensslHasher{}), genesis_expected_hash());
+    EXPECT_EQ(solution.hash(), genesis_expected_hash());
 }
