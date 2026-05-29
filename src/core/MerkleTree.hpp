@@ -12,5 +12,8 @@ class MerkleTree {
   public:
     explicit MerkleTree(std::vector<std::string_view> txid_array);
 
+    explicit MerkleTree(std::vector<TXID> txid_array):
+        txids{std::move(txid_array)} {}
+
     [[nodiscard]] auto finalize() const -> Sha256Hash;
 };

@@ -40,7 +40,7 @@ TEST(CpuEngineTest, FindsGenesisNonceSingleThread) {
     CpuEngine engine(1);
 
     MiningJob job;
-    job.block_template = genesis_template(GENESIS_NONCE - 100);
+    job.block_header = genesis_template(GENESIS_NONCE - 100);
     job.target = genesis_target();
 
     std::mutex mtx;
@@ -75,7 +75,7 @@ TEST(CpuEngineTest, FindsGenesisNonceMultithreaded) {
     CpuEngine engine(num_threads);
 
     MiningJob job;
-    job.block_template = genesis_template(GENESIS_NONCE - 1'000);
+    job.block_header = genesis_template(GENESIS_NONCE - 1'000);
     job.target = genesis_target();
 
     std::mutex mtx;

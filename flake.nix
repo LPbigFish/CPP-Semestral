@@ -8,7 +8,7 @@
 
   nixConfig = {
     extra-substituters = [
-      "https://bitcoin-regtest-mining-adapted.cachix.org"
+      #      "https://bitcoin-regtest-mining-adapted.cachix.org"
     ];
     extra-trusted-public-keys = [
       "bitcoin-regtest-mining-adapted.cachix.org-1:9gwl08sRWqIz9U7x7I/42ghX6HK0OdmAZBQJR5UMVdI="
@@ -30,9 +30,12 @@
           stdenv = pkgs.llvmPackages_latest.libcxxStdenv;
 
           customBitcoin = pkgs.bitcoin.overrideAttrs (oldAttrs: {
-            pname = "bitcoin-regtest-fast";
+            pname = "bitcoin-regtest-mining-adapted";
+            doCheck = false;
             postPatch = (oldAttrs.postPatch or "") + ''
-              sed -i 's/consensus.fPowNoRetargeting = true;/consensus.fPowNoRetargeting = false; consensus.nPowTargetSpacing = 120;/g' src/chainparams.cpp
+              sed -i 's/consensus.nSubsidyHalvingInterval = 150;/consensus.nSubsidyHalvingInterval = 210000;/g' src/kernel/chainparams.cpp
+              sed -i 's/consensus.fPowAllowMinDifficultyBlocks = true;/consensus.fPowAllowMinDifficultyBlocks = false;/g' src/kernel/chainparams.cpp
+              sed -i 's/consensus.fPowNoRetargeting = true;/consensus.fPowNoRetargeting = false; consensus.nPowTargetSpacing = 300;/g' src/kernel/chainparams.cpp
             '';
           });
 

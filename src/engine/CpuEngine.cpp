@@ -10,7 +10,7 @@
 #include <stop_token>
 #include <utility>
 
-CpuEngine::CpuEngine(uint8_t num_threads): num_threads{num_threads} {}
+CpuEngine::CpuEngine(uint32_t num_threads): num_threads{num_threads} {}
 
 auto CpuEngine::start() -> void {
     stop();
@@ -18,17 +18,19 @@ auto CpuEngine::start() -> void {
     stop_source = std::stop_source();
     threads.clear();
 
-    for (uint8_t i = 0; i < num_threads; i++) {
+    for (uint32_t i = 0; i < num_threads; i++) {
         threads.emplace_back(
             &CpuEngine::work, this, stop_source.get_token(), i
         );
     }
+    running = true;
 }
 
 auto CpuEngine::stop() -> void {
     if (stop_source.stop_possible()) {
         stop_source.request_stop();
     }
+    running = false;
 
     threads.clear();
 }
@@ -44,7 +46,7 @@ auto CpuEngine::solution_callback(
     on_solution = std::move(callback);
 }
 
-auto CpuEngine::work(const std::stop_token& token, uint8_t thread_id) -> void {
+auto CpuEngine::work(const std::stop_token& token, uint32_t thread_id) -> void {
     OpensslHasher local_hasher{};
 
     MiningJob job;
@@ -53,7 +55,7 @@ auto CpuEngine::work(const std::stop_token& token, uint8_t thread_id) -> void {
         job = current_job;
     }
 
-    auto header_bytes = job.block_template.serialize();
+    auto header_bytes = job.block_header.serialize();
     std::span<const uint8_t> head{header_bytes.data(), 64};
     std::array<uint8_t, 16> tail{};
 
@@ -62,7 +64,7 @@ auto CpuEngine::work(const std::stop_token& token, uint8_t thread_id) -> void {
     local_hasher.update(head);
     local_hasher.save_state();
 
-    uint32_t nonce{job.block_template.nonce + thread_id};
+    uint32_t nonce{job.block_header.nonce + thread_id};
 
     while (!token.stop_requested() && !solution_found.load()) {
         auto nonce_le = endian::to_le_bytes(nonce);
@@ -78,7 +80,7 @@ auto CpuEngine::work(const std::stop_token& token, uint8_t thread_id) -> void {
 
         if (final_iter < job.target) {
             if (!solution_found.exchange(true)) {
-                BlockHeader solution{job.block_template};
+                BlockHeader solution{job.block_header};
                 solution.nonce = nonce;
                 on_solution(solution);
             }

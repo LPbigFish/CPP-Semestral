@@ -33,6 +33,8 @@ fi
 
 bitcoind -datadir="$DATADIR" -conf="$CONF"
 
+bitcoin-cli -regtest -rpcuser="$RPC_USER" -rpcpassword="$RPC_PASS" -rpcport="$RPC_PORT" loadwallet default
+
 for i in $(seq 1 30); do
     if bitcoin-cli -regtest -rpcuser="$RPC_USER" -rpcpassword="$RPC_PASS" -rpcport="$RPC_PORT" getblockchaininfo > /dev/null 2>&1; then
         echo "Node is ready."

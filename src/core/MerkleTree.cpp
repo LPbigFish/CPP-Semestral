@@ -26,7 +26,7 @@ auto MerkleTree::finalize() const -> Sha256Hash {
 
     auto level = txids;
 
-    // If one present, return it
+    // If one present, skip and return it
     while (level.size() > 1) {
         if (level.size() % 2 == 1) {
             level.push_back(level.back());

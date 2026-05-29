@@ -1,11 +1,8 @@
 #pragma once
 
 #include "../core/BlockHeader.hpp"
-#include <cstdint>
 
 struct MiningJob {
-    BlockHeader block_template;
+    BlockHeader block_header;
     Sha256Hash target;
-    // For stratum if I implement it
-    uint64_t job_id{0};
 };

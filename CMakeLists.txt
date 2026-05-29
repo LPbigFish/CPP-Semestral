@@ -44,7 +44,7 @@ file(GLOB_RECURSE SOURCES src/*.cpp)
 list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
 add_library(SemestralLib STATIC ${SOURCES})
-target_link_libraries(SemestralLib PRIVATE OpenSSL::Crypto Boost::json)
+target_link_libraries(SemestralLib PUBLIC OpenSSL::Crypto Boost::headers)
 
 add_executable(Semestral src/main.cpp)
 target_link_libraries(Semestral PRIVATE SemestralLib)

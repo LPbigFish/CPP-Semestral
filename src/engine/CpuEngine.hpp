@@ -11,19 +11,20 @@
 #include <vector>
 
 class CpuEngine {
-    uint8_t num_threads{1};
     std::vector<std::jthread> threads;
+    MiningJob current_job;
     std::function<void(const BlockHeader&)> on_solution;
     std::mutex job_lock;
-    MiningJob current_job;
+    uint32_t num_threads{1};
     std::stop_source stop_source;
     std::atomic_bool solution_found{false};
+    bool running{false};
 
-    auto work(const std::stop_token& token, uint8_t thread_id) -> void;
+    auto work(const std::stop_token& token, uint32_t thread_id) -> void;
 
   public:
     CpuEngine() = default;
-    explicit CpuEngine(uint8_t num_threads);
+    explicit CpuEngine(uint32_t num_threads);
     CpuEngine(const CpuEngine& engine);
     CpuEngine(CpuEngine&& engine) noexcept;
     auto operator=(const CpuEngine& other) -> CpuEngine&;
@@ -38,4 +39,8 @@ class CpuEngine {
     auto submit_job(const MiningJob& job) -> void;
     auto solution_callback(std::function<void(const BlockHeader&)> callback)
         -> void;
+
+    auto is_running() const -> bool {
+        return running;
+    }
 };
