@@ -1,5 +1,5 @@
 #include "BlockHeader.hpp"
-#include "OpensslHasher.hpp"
+#include "../hashers/OpensslHasher.hpp"
 #include "Sha256.hpp"
 
 #include <algorithm>

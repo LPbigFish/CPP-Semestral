@@ -13,4 +13,9 @@
 ## Mining
 
 - `address <address>` Required
-- `threads <num of threads>` Deafault *ALL*
+- `threads <num of threads>` Deafault **ALL**
+- `engine <openssl | own>` Default **openssl**
+
+## Misc
+
+- `network <mainnet|testnet|regtest>` Default regtest

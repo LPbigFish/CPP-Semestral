@@ -1,5 +1,5 @@
 #include "../src/core/MerkleTree.hpp"
-#include "../src/core/OpensslHasher.hpp"
+#include "../src/hashers/OpensslHasher.hpp"
 #include <gtest/gtest.h>
 #include <string_view>
 #include <vector>

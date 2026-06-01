@@ -1,9 +1,9 @@
 #include "BlockAssembly.hpp"
 #include "../core/BlockHeader.hpp"
 #include "../core/MerkleTree.hpp"
-#include "../core/OpensslHasher.hpp"
 #include "../core/Sha256.hpp"
 #include "../core/utils.hpp"
+#include "../hashers/OpensslHasher.hpp"
 #include <array>
 #include <cstdint>
 #include <vector>

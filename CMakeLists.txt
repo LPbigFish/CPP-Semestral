@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 4.0)
 project(Semestral)
+
+set(CMAKE_BUILD_TYPE "Release")
 
 set(CMAKE_C_STANDARD 23)
 
@@ -15,6 +17,7 @@ find_package(Boost REQUIRED COMPONENTS json)
 
 add_compile_options(
   -fsanitize=address
+  -O3
   -fsanitize=undefined
   -fno-sanitize-recover=all
   -fno-omit-frame-pointer

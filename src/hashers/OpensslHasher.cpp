@@ -1,5 +1,4 @@
 #include "OpensslHasher.hpp"
-#include "Sha256.hpp"
 #include <array>
 #include <cstdint>
 #include <openssl/evp.h>
@@ -12,16 +11,15 @@ OpensslHasher::OpensslHasher() {
     this->init();
 }
 
-auto OpensslHasher::hash_bytes(const std::span<const uint8_t>& input) noexcept
+auto OpensslHasher::hash_bytes(std::span<const uint8_t> input) noexcept
     -> Sha256Hash {
     std::array<uint8_t, 32> hash{};
     SHA256(input.data(), input.size(), hash.data());
     return Sha256Hash::from_internal_bytes(hash);
 }
 
-auto OpensslHasher::double_hash_bytes(
-    const std::span<const uint8_t>& input
-) noexcept -> Sha256Hash {
+auto OpensslHasher::double_hash_bytes(std::span<const uint8_t> input) noexcept
+    -> Sha256Hash {
     std::array<uint8_t, 32> first_hash{};
     SHA256(input.data(), input.size(), first_hash.data());
 
@@ -31,7 +29,7 @@ auto OpensslHasher::double_hash_bytes(
     return Sha256Hash::from_internal_bytes(final_hash);
 }
 
-auto OpensslHasher::update(const std::span<const uint8_t>& input) -> void {
+auto OpensslHasher::update(std::span<const uint8_t> input) -> void {
     if (EVP_DigestUpdate(md_ctx.get(), input.data(), input.size()) != 1) {
         throw std::runtime_error("Failed to update digest");
     }

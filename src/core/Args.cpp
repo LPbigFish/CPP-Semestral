@@ -1,8 +1,11 @@
 #include "Args.hpp"
 
+#include <cstdint>
 #include <format>
 #include <span>
+#include <string>
 #include <string_view>
+#include <tuple>
 
 namespace core::args {
 namespace {
@@ -17,6 +20,22 @@ auto parse_uint(std::string_view value, std::string_view flag)
             std::format("Invalid value for {}: {}", flag, value)
         );
     }
+}
+
+auto handle_network_arg(std::string_view value)
+    -> std::expected<std::tuple<net::Network, uint16_t>, std::string> {
+    if (value == "mainnet") {
+        return std::make_tuple(net::Mainnet{}, 8332);
+    }
+    if (value == "testnet") {
+        return std::make_tuple(net::Testnet{}, 18332);
+    }
+    if (value == "regtest") {
+        return std::make_tuple(net::Regtest{}, 18443);
+    }
+    return std::unexpected(
+        std::format("Invalid network: {}", std::string{value})
+    );
 }
 
 auto apply_arg(CliArgs& args, std::string_view flag, std::string_view value)
@@ -35,6 +54,24 @@ auto apply_arg(CliArgs& args, std::string_view flag, std::string_view value)
     }
     if (flag == "--address") {
         args.address = value;
+        return {};
+    }
+    if (flag == "--network") {
+        auto network = handle_network_arg(value);
+        if (!network) {
+            return std::unexpected(network.error());
+        }
+        args.network = std::get<0>(*network);
+        args.rpc_port = std::get<1>(*network);
+        return {};
+    }
+    if (flag == "--engine") {
+        if (value != "own" && value != "openssl") {
+            return std::unexpected(
+                std::format("Invalid engine: {}", std::string{value})
+            );
+        }
+        args.engine = value == "own" ? EngineType::Own : EngineType::Openssl;
         return {};
     }
 
@@ -59,7 +96,8 @@ auto apply_arg(CliArgs& args, std::string_view flag, std::string_view value)
 auto is_value_arg(std::string_view arg) -> bool {
     return arg == "--rpc-host" || arg == "--rpc-port" || arg == "--rpc-username"
         || arg == "--rpc-password" || arg == "--retry" || arg == "--timeout"
-        || arg == "--threads" || arg == "--address";
+        || arg == "--threads" || arg == "--address" || arg == "--network"
+        || arg == "--engine";
 }
 
 } // namespace
@@ -78,7 +116,10 @@ auto help_text() -> std::string {
            "before giving up (default: 30)\n"
            "  --threads <number>        Number of mining threads to use "
            "(default: number of CPU cores)\n"
-           "  --verbose                 Enable verbose logging";
+           "  --verbose                 Enable verbose logging\n"
+           "  --network <network>       Network to connect to (mainnet, "
+           "testnet, regtest)\n"
+           "  --engine <engine>         Engine to use (openssl, own)";
 }
 
 auto parse_args(int argc, std::span<std::string_view> argv)

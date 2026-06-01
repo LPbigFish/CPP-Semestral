@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../core/Network.hpp"
 #include "MiningProtocol.hpp"
 #include <boost/asio.hpp>
 #include <expected>
@@ -8,16 +9,18 @@
 
 namespace json = boost::json;
 namespace asio = boost::asio;
+namespace net = core::network;
 
 using tcp = asio::ip::tcp;
 
 struct RpcConfig {
-    std::string host;
     uint16_t port;
+    uint32_t timeout{30};
+    std::string host;
     std::string username;
     std::string password;
     std::string address;
-    uint32_t timeout{30};
+    net::Network network;
 };
 
 class RpcJsonClient {

@@ -1,6 +1,7 @@
 #include "../src/engine/CpuEngine.hpp"
 #include "../src/core/BlockHeader.hpp"
-#include "../src/core/OpensslHasher.hpp"
+#include "../src/hashers/OpensslHasher.hpp"
+#include "../src/hashers/OwnHasher.hpp"
 
 #include <chrono>
 #include <condition_variable>
@@ -37,7 +38,7 @@ auto genesis_expected_hash() -> Sha256Hash {
 } // namespace
 
 TEST(CpuEngineTest, FindsGenesisNonceSingleThread) {
-    CpuEngine engine(1);
+    CpuEngine<OpensslHasher> engine(1);
 
     MiningJob job;
     job.block_header = genesis_template(GENESIS_NONCE - 100);
@@ -72,7 +73,42 @@ TEST(CpuEngineTest, FindsGenesisNonceSingleThread) {
 TEST(CpuEngineTest, FindsGenesisNonceMultithreaded) {
     uint8_t num_threads = std::max(2u, std::thread::hardware_concurrency() - 1);
     OpensslHasher hasher;
-    CpuEngine engine(num_threads);
+    CpuEngine<OpensslHasher> engine(num_threads);
+
+    MiningJob job;
+    job.block_header = genesis_template(GENESIS_NONCE - 1'000);
+    job.target = genesis_target();
+
+    std::mutex mtx;
+    std::condition_variable cv;
+    BlockHeader solution;
+    bool found = false;
+
+    engine.solution_callback([&](const BlockHeader& header) -> void {
+        std::lock_guard lock{mtx};
+        solution = header;
+        found = true;
+        cv.notify_one();
+    });
+
+    engine.submit_job(job);
+    engine.start();
+
+    {
+        std::unique_lock lock{mtx};
+        ASSERT_TRUE(cv.wait_for(lock, std::chrono::minutes(4), [&] -> bool {
+            return found;
+        }));
+    }
+
+    EXPECT_EQ(solution.nonce, GENESIS_NONCE);
+    EXPECT_EQ(solution.hash(), genesis_expected_hash());
+}
+
+TEST(CpuEngineTest, FindsGenesisNonceMultithreadedOwnHasher) {
+    uint8_t num_threads = std::max(2u, std::thread::hardware_concurrency() - 1);
+    OwnHasher hasher;
+    CpuEngine<OwnHasher> engine(num_threads);
 
     MiningJob job;
     job.block_header = genesis_template(GENESIS_NONCE - 1'000);

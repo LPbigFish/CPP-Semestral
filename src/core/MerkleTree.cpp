@@ -1,5 +1,5 @@
 #include "MerkleTree.hpp"
-#include "OpensslHasher.hpp"
+#include "../hashers/OpensslHasher.hpp"
 #include "Sha256.hpp"
 #include <algorithm>
 #include <array>

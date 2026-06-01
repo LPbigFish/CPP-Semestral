@@ -1,20 +1,24 @@
 #pragma once
 
+#include "Network.hpp"
 #include "base58.hpp"
 #include <cstdint>
 #include <expected>
 #include <string_view>
 #include <vector>
 
+namespace net = core::network;
 
 namespace core::address {
 enum class address_parse_error : std::uint8_t {
     InvalidLength,
-    InvalidBase58Input
+    InvalidBase58Input,
+    InvalidNetworkPrefix,
 };
 
-constexpr auto craft_p2pkh_scriptpubkey(std::string_view input_address)
-    -> std::expected<std::vector<uint8_t>, address_parse_error> {
+constexpr auto craft_p2pkh_scriptpubkey(
+    std::string_view input_address, net::Network expected_network
+) -> std::expected<std::vector<uint8_t>, address_parse_error> {
     auto decoded = base58::decode_base58(input_address);
 
     if (!decoded.has_value()) {
@@ -24,9 +28,11 @@ constexpr auto craft_p2pkh_scriptpubkey(std::string_view input_address)
     std::vector<uint8_t> bytes(decoded.value().begin(), decoded.value().end());
 
     if (bytes.size() != 25) {
-        return std::unexpected(
-            address_parse_error::InvalidLength
-        );
+        return std::unexpected(address_parse_error::InvalidLength);
+    }
+
+    if (bytes[0] != net::p2pkh_prefix(expected_network)) {
+        return std::unexpected(address_parse_error::InvalidNetworkPrefix);
     }
 
     // skip chain id a checksum

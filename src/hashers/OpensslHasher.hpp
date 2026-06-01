@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Sha256.hpp"
+#include "../core/Sha256.hpp"
 #include <cstddef>
 #include <memory>
 #include <openssl/evp.h>
@@ -17,12 +17,11 @@ class OpensslHasher {
 
   public:
     OpensslHasher();
-    static auto hash_bytes(const std::span<const uint8_t>& input) noexcept
+    static auto hash_bytes(std::span<const uint8_t> input) noexcept
         -> Sha256Hash;
-    static auto
-    double_hash_bytes(const std::span<const uint8_t>& input) noexcept
+    static auto double_hash_bytes(std::span<const uint8_t> input) noexcept
         -> Sha256Hash;
-    auto update(const std::span<const uint8_t>& input) -> void;
+    auto update(std::span<const uint8_t> input) -> void;
     auto finalize() -> Sha256Hash;
     auto reset() -> void;
 

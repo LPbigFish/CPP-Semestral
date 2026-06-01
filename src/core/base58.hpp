@@ -94,13 +94,4 @@ constexpr static auto decode_base58(const std::string_view& s)
 
     return result;
 }
-
-/*
-constexpr auto encode_base58(std::string_view& input) ->
-std::optional<std::string> {
-
-
-    return "";
-} */
-
 } // namespace core::base58

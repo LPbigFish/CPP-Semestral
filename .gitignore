@@ -25,3 +25,5 @@ a.out
 
 /addresses.txt
 /transactions.txt
+
+*.log

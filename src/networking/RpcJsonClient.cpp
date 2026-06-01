@@ -1,4 +1,5 @@
 #include "RpcJsonClient.hpp"
+#include "../Logger.hpp"
 #include "../core/address.hpp"
 #include <boost/beast/core/detail/base64.hpp>
 #include <boost/json/src.hpp>
@@ -103,6 +104,9 @@ auto RpcJsonClient::send_request(const json::object& data)
         asio::connect(socket, endpoints);
 
         auto body = json::serialize(data);
+        Logger::instance().debug(
+            "RPC -> {} ({} bytes)", data.at("method").as_string(), body.size()
+        );
         auto request = build_hhtp_request(body);
         asio::write(socket, asio::buffer(request));
 
@@ -123,6 +127,7 @@ auto RpcJsonClient::send_request(const json::object& data)
         std::memcpy(response.data(), buffer.data().data(), bytes_read);
 
         socket.close();
+        Logger::instance().debug("RPC <- response ({} bytes)", bytes_read);
         return parse_http_response(response);
     } catch (const std::exception& e) {
         return std::unexpected(
@@ -165,15 +170,24 @@ auto RpcJsonClient::get_block_template()
         auto coinbase_amount
             = static_cast<uint64_t>(obj.at("coinbasevalue").as_int64());
 
-        auto scriptpubkey_result
-            = core::address::craft_p2pkh_scriptpubkey(config.address);
+        auto scriptpubkey_result = core::address::craft_p2pkh_scriptpubkey(
+            config.address, config.network
+        );
 
         if (!scriptpubkey_result) {
-            return std::unexpected(
-                ProtocolError{
-                  .message = "Invalid miner address",
-                }
-            );
+            std::string_view msg;
+            switch (scriptpubkey_result.error()) {
+                case core::address::address_parse_error::InvalidBase58Input:
+                    msg = "Invalid address format";
+                    break;
+                case core::address::address_parse_error::InvalidLength:
+                    msg = "Invalid address length";
+                    break;
+                case core::address::address_parse_error::InvalidNetworkPrefix:
+                    msg = "Address does not match selected network";
+                    break;
+            }
+            return std::unexpected(ProtocolError{.message = std::string{msg}});
         }
 
         uint32_t height = static_cast<uint32_t>(obj.at("height").as_int64());
@@ -191,6 +205,15 @@ auto RpcJsonClient::get_block_template()
           .script_pubkey = std::move(*scriptpubkey_result),
           .transactions = std::move(transactions),
         };
+
+        Logger::instance().debug(
+            "Block template: height={} bits=0x{:08x} txs={} prev={}",
+            tmpl.height,
+            tmpl.bits,
+            tmpl.transactions.size(),
+            tmpl.previous_hash.to_hex()
+        );
+
         return tmpl;
     } catch (const std::exception& e) {
         return std::unexpected(
@@ -204,6 +227,9 @@ auto RpcJsonClient::get_block_template()
 
 auto RpcJsonClient::submit_block(const std::string& block_data)
     -> std::expected<void, ProtocolError> {
+    Logger::instance().debug(
+        "Submitting block ({} bytes)...", block_data.size()
+    );
     auto result = call("submitblock", json::array{block_data});
     if (!result) {
         return std::unexpected(result.error());
@@ -217,5 +243,6 @@ auto RpcJsonClient::submit_block(const std::string& block_data)
         );
     }
 
+    Logger::instance().debug("Block accepted by node");
     return {};
 }

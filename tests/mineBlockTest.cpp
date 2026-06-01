@@ -1,4 +1,5 @@
 #include "../src/engine/CpuEngine.hpp"
+#include "../src/hashers/OpensslHasher.hpp"
 #include "../src/mining/BlockAssembly.hpp"
 #include "../src/networking/RpcJsonClient.hpp"
 
@@ -8,12 +9,14 @@
 #include <mutex>
 
 TEST(MineBlockTest, FetchTemplateMineAndSubmit) {
+    ASSERT_TRUE(false) << "Trvá moc dlouho";
     RpcConfig cfg{
-      .host = "127.0.0.1",
       .port = 18443,
+      .host = "127.0.0.1",
       .username = "admin",
       .password = "password",
       .address = "mmgpupYQZV67rEnkPSwzfAde7HkQTkWpcy",
+      .network = core::network::Regtest{},
     };
     RpcJsonClient rpc{cfg};
 
@@ -23,7 +26,7 @@ TEST(MineBlockTest, FetchTemplateMineAndSubmit) {
 
     auto assembled = block_assembly::assemble(tmpl);
 
-    CpuEngine engine{1};
+    CpuEngine<OpensslHasher> engine{1};
 
     std::mutex mtx;
     std::condition_variable cv;

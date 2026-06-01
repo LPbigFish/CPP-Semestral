@@ -1,22 +1,20 @@
 #pragma once
 
+#include "Network.hpp"
 #include <cstdint>
 #include <expected>
 #include <span>
 #include <string>
 #include <thread>
 
+namespace net = core::network;
+
 namespace core::args {
 
-/*
-struct RpcConfig {
-    std::string host;
-    uint16_t port;
-    std::string username;
-    std::string password;
-    std::string address;
+enum class EngineType : uint8_t {
+    Own,
+    Openssl,
 };
-*/
 
 struct CliArgs {
     std::string rpc_host{"127.0.0.1"};
@@ -28,7 +26,9 @@ struct CliArgs {
     bool verbose{false};
 
     std::string address;
+    net::Network network{net::Regtest{}};
     uint32_t threads{std::thread::hardware_concurrency()};
+    EngineType engine{EngineType::Openssl};
 };
 
 auto help_text() -> std::string;

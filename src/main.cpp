@@ -1,5 +1,7 @@
+#include "Logger.hpp"
 #include "core/Args.hpp"
 #include "engine/Conductor.hpp"
+#include "hashers/OwnHasher.hpp"
 
 #include <atomic>
 #include <csignal>
@@ -10,7 +12,11 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <variant>
 #include <vector>
+
+using AnyConductor
+    = std::variant<Conductor<OwnHasher>, Conductor<OpensslHasher>>;
 
 auto main(int argc, char** argv) -> int32_t {
     static std::atomic_bool running{true};
@@ -33,26 +39,36 @@ auto main(int argc, char** argv) -> int32_t {
 
     const auto& args = *result;
 
-    if (args.verbose) {
-        std::println("address: {}", args.address);
-        std::println(
-            "rpc: {}@{}:{}", args.rpc_username, args.rpc_host, args.rpc_port
-        );
-        std::println("threads: {}", args.threads);
-    }
+    Logger::instance().init(args.verbose);
 
-    std::signal(SIGINT, [](int) { running.store(false); });
-    std::signal(SIGTERM, [](int) { running.store(false); });
+    Logger::instance().debug("address: {}", args.address);
+    Logger::instance().debug(
+        "rpc: {}@{}:{}", args.rpc_username, args.rpc_host, args.rpc_port
+    );
+    Logger::instance().debug("threads: {}", args.threads);
 
-    Conductor conductor{args};
-    conductor.start();
+    std::signal(SIGINT, [](int) -> void { running.store(false); });
+    std::signal(SIGTERM, [](int) -> void { running.store(false); });
+
+    auto make_conductor = [&]() -> AnyConductor {
+        if (args.engine == core::args::EngineType::Own) {
+            Logger::instance().info("Using own hasher");
+            return AnyConductor{std::in_place_type<Conductor<OwnHasher>>, args};
+        }
+        Logger::instance().info("Using OpenSSL hasher");
+        return AnyConductor{std::in_place_type<Conductor<OpensslHasher>>, args};
+    };
+
+    auto conductor = make_conductor();
+
+    std::visit([](auto& c) -> auto { c.start(); }, conductor);
 
     while (running.load()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    std::println("\nShutting down...");
-    conductor.stop();
+    Logger::instance().info("Shutting down...");
+    std::visit([](auto& c) -> auto { c.stop(); }, conductor);
 
     return 0;
 }
