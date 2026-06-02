@@ -104,6 +104,8 @@ auto is_value_arg(std::string_view arg) -> bool {
 
 auto help_text() -> std::string {
     return "Usage: ./miner --address <address> [options]\n"
+           "OR"
+           "Usage: ./miner --bench\n"
            "Options:\n"
            "  --rpc-host <host>         RPC server host (default: 127.0.0.1)\n"
            "  --rpc-port <port>         RPC server port (default: 18443)\n"
@@ -119,7 +121,8 @@ auto help_text() -> std::string {
            "  --verbose                 Enable verbose logging\n"
            "  --network <network>       Network to connect to (mainnet, "
            "testnet, regtest)\n"
-           "  --engine <engine>         Engine to use (openssl, own)";
+           "  --engine <engine>         Engine to use (openssl, own)\n"
+           "  --bench                   Run benchmark test\n";
 }
 
 auto parse_args(int argc, std::span<std::string_view> argv)
