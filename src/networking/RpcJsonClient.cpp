@@ -9,7 +9,7 @@
 #include <string_view>
 #include <utility>
 
-int RpcJsonClient::call_id = 1;
+std::atomic_int RpcJsonClient::call_id{1};
 
 RpcJsonClient::RpcJsonClient(RpcConfig config): config{std::move(config)} {
     auth_header
@@ -101,22 +101,133 @@ auto RpcJsonClient::send_request(const json::object& data)
         tcp::resolver resolver{io_context};
         auto endpoints
             = resolver.resolve(config.host, std::to_string(config.port));
-        asio::connect(socket, endpoints);
+
+        bool connect_timed_out = false;
+        asio::steady_timer deadline{
+          io_context, std::chrono::seconds{config.timeout_sec}
+        };
+        deadline.async_wait([&](const boost::system::error_code& ec) {
+            if (!ec) {
+                connect_timed_out = true;
+                socket.cancel();
+            }
+        });
+
+        boost::system::error_code connect_ec;
+        asio::async_connect(
+            socket,
+            endpoints,
+            [&](const boost::system::error_code& ec, const tcp::endpoint&) {
+                if (ec) {
+                    connect_ec = ec;
+                    deadline.cancel();
+                    return;
+                }
+                deadline.cancel();
+            }
+        );
+
+        io_context.restart();
+        io_context.run();
+
+        if (connect_ec) {
+            if (connect_timed_out) {
+                return std::unexpected(
+                    ProtocolError{.message = "Connect timeout"}
+                );
+            }
+            return std::unexpected(
+                ProtocolError{
+                  .message
+                  = std::format("Connect error: {}", connect_ec.message()),
+                }
+            );
+        }
 
         auto body = json::serialize(data);
         Logger::instance().debug(
             "RPC -> {} ({} bytes)", data.at("method").as_string(), body.size()
         );
         auto request = build_hhtp_request(body);
-        asio::write(socket, asio::buffer(request));
 
-        asio::streambuf buffer;
-        boost::system::error_code ec;
-        asio::read(socket, buffer, ec);
-        if (ec && ec != asio::error::eof) {
+        bool write_timed_out = false;
+        deadline.expires_after(std::chrono::seconds{config.timeout_sec});
+        deadline.async_wait([&](const boost::system::error_code& ec) -> void {
+            if (!ec) {
+                write_timed_out = true;
+                socket.cancel();
+            }
+        });
+
+        boost::system::error_code write_ec;
+        asio::async_write(
+            socket,
+            asio::buffer(request),
+            [&](const boost::system::error_code& ec, size_t) {
+                if (ec) {
+                    write_ec = ec;
+                    deadline.cancel();
+                    return;
+                }
+                deadline.cancel();
+            }
+        );
+
+        io_context.restart();
+        io_context.run();
+
+        if (write_ec) {
+            if (write_timed_out) {
+                return std::unexpected(
+                    ProtocolError{.message = "Write timeout"}
+                );
+            }
             return std::unexpected(
                 ProtocolError{
-                  .message = std::format("Network error: {}", ec.message()),
+                  .message = std::format("Write error: {}", write_ec.message()),
+                }
+            );
+        }
+
+        bool read_timed_out = false;
+        deadline.expires_after(std::chrono::seconds{config.timeout_sec});
+        deadline.async_wait([&](const boost::system::error_code& ec) -> void {
+            if (!ec) {
+                read_timed_out = true;
+                socket.cancel();
+            }
+        });
+
+        asio::streambuf buffer;
+        boost::system::error_code read_ec;
+        asio::async_read(
+            socket, buffer, [&](const boost::system::error_code& ec, size_t) {
+                if (ec == asio::error::eof) {
+                    deadline.cancel();
+                    read_ec = {};
+                    return;
+                }
+                if (ec) {
+                    deadline.cancel();
+                    read_ec = ec;
+                    return;
+                }
+            }
+        );
+
+        io_context.restart();
+        io_context.run();
+
+        if (read_ec) {
+            if (read_timed_out) {
+                return std::unexpected(
+                    ProtocolError{.message = "Read timeout"}
+                );
+            }
+            return std::unexpected(
+                ProtocolError{
+                  .message
+                  = std::format("Network error: {}", read_ec.message()),
                 }
             );
         }
@@ -145,6 +256,14 @@ auto RpcJsonClient::call(std::string_view method, json::array params)
       {"params", std::move(params)},
     };
     return send_request(request);
+}
+
+auto RpcJsonClient::ping() -> std::expected<void, ProtocolError> {
+    auto result = call("getblockchaininfo", json::array{});
+    if (!result) {
+        return std::unexpected(result.error());
+    }
+    return {};
 }
 
 auto RpcJsonClient::get_block_template()

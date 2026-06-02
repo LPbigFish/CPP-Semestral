@@ -110,8 +110,8 @@ auto help_text() -> std::string {
            "  --rpc-username <username> RPC server username (default: admin)\n"
            "  --rpc-password <password> RPC server password (default: "
            "password)\n"
-           "  --retry <seconds>         Seconds to wait before retrying "
-           "after an error (default: 5)\n"
+           "  --retry <count>           Max consecutive RPC failures before "
+           "shutdown (default: 5)\n"
            "  --timeout <seconds>       Seconds to wait for a solution "
            "before giving up (default: 30)\n"
            "  --threads <number>        Number of mining threads to use "
@@ -133,6 +133,11 @@ auto parse_args(int argc, std::span<std::string_view> argv)
             return std::unexpected(help_text());
         }
 
+        if (arg == "--bench") {
+            args.benchmark = true;
+            continue;
+        }
+
         if (arg == "--verbose") {
             args.verbose = true;
             continue;
@@ -152,8 +157,12 @@ auto parse_args(int argc, std::span<std::string_view> argv)
         }
     }
 
-    if (args.address.empty()) {
+    if (args.address.empty() && !args.benchmark) {
         return std::unexpected("--address is required");
+    }
+
+    if (args.threads == 0) {
+        args.threads = 1;
     }
 
     return args;

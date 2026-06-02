@@ -2,6 +2,7 @@
 
 #include "../core/Network.hpp"
 #include "MiningProtocol.hpp"
+#include <atomic>
 #include <boost/asio.hpp>
 #include <expected>
 #include <string>
@@ -15,7 +16,7 @@ using tcp = asio::ip::tcp;
 
 struct RpcConfig {
     uint16_t port;
-    uint32_t timeout{30};
+    uint32_t timeout_sec{30};
     std::string host;
     std::string username;
     std::string password;
@@ -27,7 +28,7 @@ class RpcJsonClient {
     asio::io_context io_context{};
     RpcConfig config{};
     std::string auth_header;
-    static int call_id;
+    static std::atomic_int call_id;
 
     auto send_request(const json::object& data)
         -> std::expected<json::value, ProtocolError>;
@@ -40,6 +41,8 @@ class RpcJsonClient {
 
     auto call(std::string_view method, json::array params)
         -> std::expected<json::value, ProtocolError>;
+
+    auto ping() -> std::expected<void, ProtocolError>;
 
     auto get_block_template() -> std::expected<BlockTemplate, ProtocolError>;
 
@@ -55,5 +58,13 @@ class RpcJsonClient {
 
     [[nodiscard]] auto get_address() const -> std::string {
         return config.address;
+    }
+
+    [[nodiscard]] auto get_host() const -> std::string {
+        return config.host;
+    }
+
+    [[nodiscard]] auto get_port() const -> uint16_t {
+        return config.port;
     }
 };

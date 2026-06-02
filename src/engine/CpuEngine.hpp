@@ -5,6 +5,7 @@
 #include "../hashers/Hasher.hpp"
 #include "../mining/MiningJob.hpp"
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <mutex>
@@ -18,11 +19,13 @@ template<Hasher H> class CpuEngine {
     MiningJob current_job;
     std::function<void(const BlockHeader&)> on_solution;
     std::mutex job_lock;
+    std::mutex measure_mutex;
     uint32_t num_threads{1};
     std::stop_source stop_source;
     std::atomic_bool solution_found{false};
     std::atomic<uint64_t> hashes_computed{0};
-    bool running{false};
+    std::chrono::steady_clock::time_point last_measure_time;
+    std::atomic_bool running{false};
 
   public:
     CpuEngine() = default;
@@ -35,6 +38,14 @@ template<Hasher H> class CpuEngine {
 
     ~CpuEngine() {
         stop();
+    }
+
+    auto stop() -> void {
+        if (stop_source.stop_possible()) {
+            stop_source.request_stop();
+        }
+        running.store(false);
+        threads.clear();
     }
 
     auto start() -> void {
@@ -51,17 +62,11 @@ template<Hasher H> class CpuEngine {
                 &CpuEngine::work, this, stop_source.get_token(), i
             );
         }
-        running = true;
-    }
-
-    auto stop() -> void {
-        if (stop_source.stop_possible()) {
-            stop_source.request_stop();
+        {
+            std::lock_guard lock{measure_mutex};
+            last_measure_time = std::chrono::steady_clock::now();
         }
-        running = false;
-
-        threads.clear();
-        Logger::instance().debug("Mining engine stopped");
+        running.store(true);
     }
 
     auto submit_job(const MiningJob& job) -> void {
@@ -81,15 +86,23 @@ template<Hasher H> class CpuEngine {
     }
 
     auto is_running() const -> bool {
-        return running;
+        return running.load();
     }
 
     auto get_hashrate() -> double {
-        if (!running) {
+        if (!running.load()) {
             return 0.0;
         }
+        std::lock_guard lock{measure_mutex};
+        auto now = std::chrono::steady_clock::now();
+        double elapsed
+            = std::chrono::duration<double>(now - last_measure_time).count();
+        last_measure_time = now;
         uint64_t hashes = hashes_computed.exchange(0);
-        return static_cast<double>(hashes) / 1'000'000.0; // MH/s
+        if (elapsed <= 0.0) {
+            return 0.0;
+        }
+        return (static_cast<double>(hashes) / elapsed) / 1'000'000.0;
     }
 
   private:
@@ -155,10 +168,16 @@ template<Hasher H> class CpuEngine {
             }
 
             if ((local_count & 0xFFFF) == 0) {
-                hashes_computed.fetch_add(0xFFFF, std::memory_order_relaxed);
+                hashes_computed.fetch_add(
+                    0xFFFF + 1, std::memory_order_relaxed
+                );
             }
 
             nonce += num_threads;
         }
+
+        hashes_computed.fetch_add(
+            local_count & 0xFFFF, std::memory_order_relaxed
+        );
     }
 };

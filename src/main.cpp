@@ -1,6 +1,8 @@
+#include "Benchmark.hpp"
 #include "Logger.hpp"
 #include "core/Args.hpp"
 #include "engine/Conductor.hpp"
+#include "hashers/OpensslHasher.hpp"
 #include "hashers/OwnHasher.hpp"
 
 #include <atomic>
@@ -41,6 +43,16 @@ auto main(int argc, char** argv) -> int32_t {
 
     Logger::instance().init(args.verbose);
 
+    if (args.benchmark) {
+        benchmark::run(
+            args.threads,
+            benchmark::named<OpensslHasher>("OpenSSL Engine"),
+            benchmark::named<OwnHasher>("Own Engine")
+        );
+
+        return 0;
+    }
+
     Logger::instance().debug("address: {}", args.address);
     Logger::instance().debug(
         "rpc: {}@{}:{}", args.rpc_username, args.rpc_host, args.rpc_port
@@ -61,9 +73,20 @@ auto main(int argc, char** argv) -> int32_t {
 
     auto conductor = make_conductor();
 
-    std::visit([](auto& c) -> auto { c.start(); }, conductor);
+    bool ok = std::visit([](auto& c) -> bool { return c.start(); }, conductor);
+    if (!ok) {
+        return 1;
+    }
 
     while (running.load()) {
+        bool failed = std::visit(
+            [](const auto& c) -> bool { return c.is_failed(); }, conductor
+        );
+        if (failed) {
+            Logger::instance().info("Shutting down due to critical failure...");
+            std::visit([](auto& c) -> auto { c.stop(); }, conductor);
+            return 1;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 

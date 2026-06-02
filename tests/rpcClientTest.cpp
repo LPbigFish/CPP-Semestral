@@ -88,7 +88,7 @@ TEST(RpcJsonClientTest, ParseHttpResponseEmptyBody) {
 TEST(RpcJsonClientTest, CallFailsWithoutServer) {
     RpcConfig cfg{
       .port = 18443,
-      .host = "127.0.0.2",
+      .host = "not-existent-random.offline",
       .username = "a",
       .password = "b",
       .address = "2N1uLZt3n5sHjvVh9Zp7qj8XoG9m1z6yqj",

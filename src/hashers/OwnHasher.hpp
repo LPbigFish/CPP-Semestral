@@ -36,17 +36,17 @@ constexpr std::array<uint32_t, 8> INITIAL_HASH{
 
 class OwnHasher {
     struct State {
-        std::array<uint8_t, 64> buffer{};
         std::array<uint32_t, 8> ctx{};
         uint64_t total_len{0};
-        uint8_t buffer_ptr{0};
+        size_t buffer_ptr{0};
+        std::array<uint8_t, 64> buffer{};
     };
 
     std::optional<State> saved_state;
     std::array<uint32_t, 8> md_ctx{};
-    std::array<uint8_t, 64> buffer{};
-    uint8_t buffer_ptr{0};
+    size_t buffer_ptr{0};
     uint64_t total_len{0};
+    std::array<uint8_t, 64> buffer{};
     bool has_saved_state{false};
 
   public:

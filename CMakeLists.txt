@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 4.0)
 project(Semestral)
 
-set(CMAKE_BUILD_TYPE "Release")
-
 set(CMAKE_C_STANDARD 23)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -16,14 +14,6 @@ find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS json)
 
 add_compile_options(
-  -fsanitize=address
-  -O3
-  -fsanitize=undefined
-  -fno-sanitize-recover=all
-  -fno-omit-frame-pointer
-  -g
-  -fstack-protector-strong
-  -Wno-unused-result
   -Wall
   -Wextra
   -Werror=uninitialized
@@ -34,14 +24,27 @@ add_compile_options(
   -Wformat
   -Wformat-security
   -Wstrict-overflow
-  -Wstrict-prototypes
   -Wcast-align
   -Wredundant-decls
   -Wpedantic
   -Werror
   -Wno-shadow)
 
-add_link_options(-fsanitize=address -fsanitize=undefined)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_compile_options(
+    -fsanitize=address
+    -fsanitize=undefined
+    -fno-sanitize-recover=all
+    -fno-omit-frame-pointer
+    -g
+    -fstack-protector-strong
+    -O1)
+  add_link_options(-fsanitize=address -fsanitize=undefined)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  add_compile_options(-O3 -DNDEBUG)
+else()
+  add_compile_options(-O2)
+endif()
 
 file(GLOB_RECURSE SOURCES src/*.cpp)
 list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")

@@ -2,10 +2,10 @@
 
 ## Networking
 
-- `host <IP>` Default 127.0.0.1
-- `port <PORT>` Default 18443
-- `user <username>` Default admin
-- `pass <password>` Default password
+- `rpc-host <IP>` Default 127.0.0.1
+- `rpc-port <PORT>` Default 18443
+- `rpc-username <username>` Default admin
+- `rpc-password <password>` Default password
 - `retry <number>` Default 5 retries on RPC connection
 - `timeout <seconds>` Default 10s on RPC connection
 - `verbose` Log everything
@@ -19,3 +19,4 @@
 ## Misc
 
 - `network <mainnet|testnet|regtest>` Default regtest
+- `bench` Runs benchmark, ignores the rest

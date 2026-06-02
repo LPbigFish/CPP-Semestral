@@ -1,4 +1,5 @@
 #include "OwnHasher.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <span>
 
@@ -90,8 +91,8 @@ auto OwnHasher::reset() -> void {
 auto OwnHasher::save_state() -> void {
     if (!has_saved_state) {
         saved_state = State{};
-        saved_state->ctx = md_ctx;
-        saved_state->buffer = buffer;
+        std::ranges::copy(md_ctx, saved_state->ctx.begin());
+        std::ranges::copy(buffer, saved_state->buffer.begin());
         saved_state->total_len = total_len;
         saved_state->buffer_ptr = buffer_ptr;
         has_saved_state = true;
@@ -100,8 +101,8 @@ auto OwnHasher::save_state() -> void {
 
 auto OwnHasher::restore_state() -> void {
     if (has_saved_state) {
-        md_ctx = saved_state->ctx;
-        buffer = saved_state->buffer;
+        std::ranges::copy(saved_state->ctx, md_ctx.begin());
+        std::ranges::copy(saved_state->buffer, buffer.begin());
         total_len = saved_state->total_len;
         buffer_ptr = saved_state->buffer_ptr;
     }

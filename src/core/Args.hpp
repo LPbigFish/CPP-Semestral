@@ -24,6 +24,7 @@ struct CliArgs {
     uint32_t retry{5};
     uint32_t timeout{30};
     bool verbose{false};
+    bool benchmark{false};
 
     std::string address;
     net::Network network{net::Regtest{}};
