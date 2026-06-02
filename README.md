@@ -1,6 +1,6 @@
 # Bitcoin CPU Miner
 
-CLI Bitcoin miner implementovaný v C++23. [Showcase Video](https://youtu.be/p0BtVJrG7Ec)
+CLI Bitcoin miner implementovaný v C++23. [Showcase Video](https://youtu.be/Qu8pxSvIzaA)
 
 ## Přehled
 
