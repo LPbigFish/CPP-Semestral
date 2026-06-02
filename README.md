@@ -1,6 +1,6 @@
 # Bitcoin CPU Miner
 
-CLI Bitcoin miner implementovaný v C++23
+CLI Bitcoin miner implementovaný v C++23. [Showcase Video](https://youtu.be/p0BtVJrG7Ec)
 
 ## Přehled
 
@@ -29,6 +29,8 @@ nix build .
 ```
 
 ## Použití
+
+Je lepší využít Nix devshell, protože obsahuje upravenou verzi Bitcoin node.
 
 Nejprve spusťte Bitcoin node v regtest módu:
 
